@@ -5,6 +5,8 @@ Handles Multimodal Direct Document Extraction, Robust Parsing Fallbacks,
 Structured JSON Normalization, Multi-turn Copilot, and Contextual Interview Kits.
 """
 
+import os
+import asyncio
 import json
 import re
 import logging
@@ -45,12 +47,36 @@ class GeminiService:
         self._init_sdk()
 
     def _init_sdk(self):
+        """Initialize Google GenAI SDK prioritizing Vertex AI Service Account authentication."""
         try:
             from google import genai
-            self.genai_client = genai.Client(api_key=self.api_key)
-            logger.info("Configured Google GenAI Client successfully.")
+            
+            # Resolve Service Account JSON path if present
+            cred_path = getattr(settings, "GOOGLE_APPLICATION_CREDENTIALS", "")
+            if cred_path and not os.path.isabs(cred_path):
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                resolved = os.path.join(base_dir, cred_path)
+                if os.path.exists(resolved):
+                    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = resolved
+
+            project_id = getattr(settings, "GCP_PROJECT_ID", "") or os.getenv("GCP_PROJECT_ID", "gen-lang-client-0394973299")
+            location = getattr(settings, "GCP_LOCATION", "us-central1")
+
+            # 1. Try Vertex AI native client (Keyless / SA JSON / Cloud Run ADC)
+            try:
+                self.genai_client = genai.Client(vertexai=True, project=project_id, location=location)
+                logger.info(f"Initialized Google GenAI on Vertex AI Enterprise (Project: {project_id}).")
+                return
+            except Exception as e:
+                logger.warning(f"Vertex AI initialization notice: {e}")
+
+            # 2. Fallback to API Key if configured
+            api_key = settings.GEMINI_API_KEY or self.api_key
+            if api_key:
+                self.genai_client = genai.Client(api_key=api_key)
+                logger.info("Initialized Google GenAI Client with API Key.")
         except Exception as e:
-            logger.info(f"Google GenAI SDK not present locally ({e}). Using native High-Speed Async REST client.")
+            logger.info(f"Google GenAI SDK init error ({e}). Using native High-Speed Async REST client.")
             self.genai_client = None
 
     def _clean_json_text(self, text: str) -> str:
@@ -75,7 +101,27 @@ class GeminiService:
         return cleaned
 
     async def _call_gemini_api(self, prompt: str, system_instruction: str = "") -> str:
-        """Execute async REST call to Gemini 2.5 Flash API with active API Key."""
+        """Execute call to Gemini 2.5 Flash API via Vertex AI or REST fallback."""
+        # 1. Try Vertex AI / GenAI Client First
+        if self.genai_client:
+            try:
+                def _invoke():
+                    contents = prompt
+                    if system_instruction:
+                        contents = f"{system_instruction}\n\n{prompt}"
+                    resp = self.genai_client.models.generate_content(
+                        model=self.model,
+                        contents=[contents]
+                    )
+                    return resp.text.strip() if resp.text else ""
+                
+                result = await asyncio.to_thread(_invoke)
+                if result:
+                    return result
+            except Exception as e:
+                logger.warning(f"GenAI Client call failed ({e}). Attempting REST endpoint fallback...")
+
+        # 2. Fallback to REST Endpoint with active API Key
         api_key = settings.GEMINI_API_KEY or self.api_key
         url = f"{GEMINI_API_URL}/{self.model}:generateContent?key={api_key}"
         
