@@ -220,8 +220,23 @@ async def chat_with_candidate(
     )
 
     candidate = await firestore_repo.get_candidate(current_user.uid, candidate_id)
+    if not candidate and request.candidate_data:
+        try:
+            candidate = CandidateProfile(**request.candidate_data)
+        except Exception as e:
+            logger.warning(f"Failed to parse candidate_data from request: {e}")
+            candidate = None
+
     if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+        # Cross-session fallback for stateless Cloud Run instances
+        from backend.firestore_service import _local_memory_store
+        for u_id, c_dict in _local_memory_store.items():
+            if candidate_id in c_dict:
+                candidate = CandidateProfile(**c_dict[candidate_id])
+                break
+
+    if not candidate:
+        raise HTTPException(status_code=404, detail=f"Candidate '{candidate_id}' not found in active session")
 
     # Record user message
     user_msg = ChatMessage(role="user", content=request.message)

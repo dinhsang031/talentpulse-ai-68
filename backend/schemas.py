@@ -219,6 +219,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(description="User prompt/question to the candidate copilot")
     history: Optional[List[ChatMessage]] = Field(default_factory=list)
+    candidate_data: Optional[Dict[str, Any]] = Field(default=None, description="Optional payload containing client candidate dossier for stateless scaling")
 
 
 class ChatResponse(BaseModel):

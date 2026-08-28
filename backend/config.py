@@ -48,26 +48,36 @@ class Settings(BaseSettings):
 
 settings = Settings()
 
-# Auto-discover Firebase service account JSON in credentials dir if not explicitly set
-def get_service_account_file() -> str:
-    if settings.FIREBASE_SERVICE_ACCOUNT_PATH:
-        if os.path.isabs(settings.FIREBASE_SERVICE_ACCOUNT_PATH) and os.path.exists(settings.FIREBASE_SERVICE_ACCOUNT_PATH):
-            return settings.FIREBASE_SERVICE_ACCOUNT_PATH
-        rel_path = os.path.join(BASE_DIR, settings.FIREBASE_SERVICE_ACCOUNT_PATH)
-        if os.path.exists(rel_path):
-            return rel_path
-
-    # Search credentials dir
+# Specific Service Account resolution
+def get_vertex_service_account() -> str:
+    sa_path = os.path.join(BASE_DIR, "backend", "credentials", "gen-lang-client-0394973299-d70ee52df136.json")
+    if os.path.exists(sa_path):
+        return sa_path
+    # Fallback search
     cred_dir = os.path.join(BASE_DIR, "backend", "credentials")
-    json_files = glob.glob(os.path.join(cred_dir, "*.json"))
-    if json_files:
-        return json_files[0]
+    for f in glob.glob(os.path.join(cred_dir, "*.json")):
+        if "gen-lang" in f:
+            return f
     return ""
 
-SERVICE_ACCOUNT_FILE = get_service_account_file()
-if SERVICE_ACCOUNT_FILE:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = SERVICE_ACCOUNT_FILE
-    logger.info(f"Using Service Account File: {SERVICE_ACCOUNT_FILE}")
+def get_firebase_service_account() -> str:
+    sa_path = os.path.join(BASE_DIR, "backend", "credentials", "talent-pulse-ai-firebase-adminsdk-fbsvc-70643cb972.json")
+    if os.path.exists(sa_path):
+        return sa_path
+    cred_dir = os.path.join(BASE_DIR, "backend", "credentials")
+    for f in glob.glob(os.path.join(cred_dir, "*.json")):
+        if "firebase" in f:
+            return f
+    return ""
+
+VERTEX_SA_FILE = get_vertex_service_account()
+FIREBASE_SA_FILE = get_firebase_service_account()
+SERVICE_ACCOUNT_FILE = VERTEX_SA_FILE or FIREBASE_SA_FILE
+
+# Set GOOGLE_APPLICATION_CREDENTIALS for Vertex AI & Cloud Run IAM
+if VERTEX_SA_FILE and os.path.exists(VERTEX_SA_FILE):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = VERTEX_SA_FILE
+    logger.info(f"Using Vertex AI Enterprise Service Account: {os.path.basename(VERTEX_SA_FILE)}")
 
 
 def resolve_secret_manager():

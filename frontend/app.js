@@ -542,13 +542,20 @@ async function handleChatSubmit(e) {
     const resp = await fetch(`/api/candidates/${currentCandidate.id}/chat`, {
       method: "POST",
       headers: headers,
-      body: JSON.stringify({ message: message, history: [] })
+      body: JSON.stringify({
+        message: message,
+        history: [],
+        candidate_data: currentCandidate
+      })
     });
 
     const loadingEl = document.getElementById(loadingId);
     if (loadingEl) loadingEl.remove();
 
-    if (!resp.ok) throw new Error("Chat request failed");
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({ detail: "Chat request failed" }));
+      throw new Error(errData.detail || `Server returned status ${resp.status}`);
+    }
     const data = await resp.json();
 
     chatContainer.innerHTML += `
@@ -602,7 +609,10 @@ async function handleGenerateInterviewKit() {
       headers: headers
     });
 
-    if (!resp.ok) throw new Error("Interview Kit generation failed");
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({ detail: "Interview Kit generation failed" }));
+      throw new Error(errData.detail || `Server returned status ${resp.status}`);
+    }
     const data = await resp.json();
 
     container.innerHTML = data.questions.map((q, idx) => `
