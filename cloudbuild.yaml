@@ -10,7 +10,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA']
 
-  # 3. Deploy Container to Google Cloud Run
+  # 3. Deploy Container to Google Cloud Run (Preserves Cloud Run Env Vars)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -24,8 +24,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--set-secrets'
-      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest'
 
 images:
   - 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA'
