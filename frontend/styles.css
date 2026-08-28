@@ -1,140 +1,148 @@
 /* ==============================================================================
-   TalentPulse AI - Executive Enterprise Design System (CSS)
-   Colors: Deep Obsidian (#080c14), Midnight Navy (#0f172a), Royal Indigo (#4f46e5), Cyan (#06b6d4), Emerald (#10b981)
+   TalentPulse AI — Vercel Mesh Style Recipe & Enterprise Design System
+   Source: references/style-recipes/vercel-mesh.md
+   Palette: #000000 (Ground) / #0A0A0A (Surface 1) / #111111 (Surface 2) / rgba(255,255,255,0.08) (Hairline)
    ============================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap');
+
 :root {
-  --bg-primary: #07090e;
-  --bg-surface: #0e1526;
-  --bg-card: rgba(15, 23, 42, 0.75);
-  --border-subtle: rgba(51, 65, 85, 0.6);
-  --border-accent: rgba(99, 102, 241, 0.4);
-  --brand-primary: #4f46e5;
-  --brand-cyan: #06b6d4;
-  --brand-emerald: #10b981;
+  --ground: #000000;
+  --surface-1: #0a0a0a;
+  --surface-2: #111111;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-hover: rgba(255, 255, 255, 0.18);
+  --text-primary: #ededed;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --accent-cyan: #0070f3;
+  --accent-magenta: #ff0080;
+  --accent-amber: #f5a623;
+  --accent-emerald: #10b981;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: var(--bg-primary);
-  color: #f1f5f9;
+  background-color: var(--ground);
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.font-mono {
+  font-family: 'Geist Mono', monospace;
 }
 
 .font-outfit {
   font-family: 'Outfit', sans-serif;
 }
 
-/* Glassmorphism Surface with Subtle Glow */
-.glass-panel {
-  background: rgba(14, 21, 38, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Ambient Diffuse Background Mesh */
+.ambient-mesh {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: 
+    radial-gradient(at 15% 15%, rgba(0, 112, 243, 0.08) 0px, transparent 60%),
+    radial-gradient(at 85% 10%, rgba(255, 0, 128, 0.05) 0px, transparent 55%),
+    radial-gradient(at 50% 85%, rgba(245, 166, 35, 0.04) 0px, transparent 60%);
+  opacity: 0.85;
 }
 
-.glass-panel:hover {
-  border-color: rgba(99, 102, 241, 0.4);
+/* Vercel Precision Card */
+.mesh-card {
+  background: var(--surface-1);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Primary Enterprise Button Gradient */
-.btn-primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%);
-  background-size: 200% 200%;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.35);
+.mesh-card:hover {
+  border-color: var(--hairline-hover);
+  background: #0d0d0d;
 }
 
-.btn-primary:hover {
-  background-position: right center;
-  box-shadow: 0 6px 20px 0 rgba(6, 182, 212, 0.45);
+/* High-Contrast White Action Button */
+.btn-white-cta {
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 700;
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.15);
+}
+
+.btn-white-cta:hover {
+  background-color: #e5e5e5;
   transform: translateY(-1px);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.3);
 }
 
-.btn-primary:active {
+.btn-white-cta:active {
   transform: translateY(0);
 }
 
-/* Secondary Button */
-.btn-secondary {
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(71, 85, 105, 0.6);
-  transition: all 0.2s ease;
+/* Secondary Ghost Button */
+.btn-ghost-dark {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline);
+  color: var(--text-primary);
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-secondary:hover {
-  background: rgba(51, 65, 85, 0.8);
-  border-color: rgba(99, 102, 241, 0.5);
+.btn-ghost-dark:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--hairline-hover);
   color: #ffffff;
 }
 
-/* Custom Scrollbar */
+/* Custom Precision Scrollbars */
 .custom-scroll::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scroll::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.4);
-  border-radius: 9999px;
+  background: transparent;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.7);
+  background: #222222;
   border-radius: 9999px;
 }
 
 .custom-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.8);
+  background: #333333;
 }
 
-/* Drag and Drop Zone */
-.dropzone-active {
-  border-color: #6366f1 !important;
-  background: rgba(79, 70, 229, 0.12) !important;
-  box-shadow: 0 0 24px rgba(99, 102, 241, 0.25) inset;
+/* Dropzone Hover State */
+.dropzone-mesh-active {
+  border-color: var(--text-primary) !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  box-shadow: 0 0 30px rgba(0, 112, 243, 0.15) inset;
 }
 
-/* Zero-bias blind screening text redaction */
+/* Blind Screening Redaction */
 .redacted-blur {
-  filter: blur(6px);
+  filter: blur(5px);
   user-select: none;
-  transition: filter 0.3s ease;
+  transition: filter 0.2s ease;
 }
 
-/* Toast Floating Notification */
-.toast-enter {
-  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Toast Floating Notifications */
+.toast-slide-in {
+  animation: toastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes slideInRight {
+@keyframes toastIn {
   from {
-    transform: translateX(100%);
     opacity: 0;
+    transform: translateY(12px) scale(0.96);
   }
   to {
-    transform: translateX(0);
     opacity: 1;
-  }
-}
-
-/* Badge Pulse Animation */
-.badge-pulse {
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: pulse-green 2s infinite;
-}
-
-@keyframes pulse-green {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    transform: translateY(0) scale(1);
   }
 }

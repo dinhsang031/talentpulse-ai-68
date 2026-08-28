@@ -1,6 +1,6 @@
 /**
- * TalentPulse AI - Executive Frontend Application Logic
- * Integrates Firebase Auth, Multimodal Drag & Drop Upload, 4D Radar Fit Chart,
+ * TalentPulse AI — Vercel Mesh Frontend Application Logic
+ * Integrates Multimodal Drag & Drop Upload, 4D Radar Fit Chart,
  * Zero-Bias Blind Screening, Multi-turn Copilot Chat, and Contextual Interview Kits.
  */
 
@@ -28,17 +28,17 @@ function showToast(message, type = "info") {
   const isError = type === "error";
   const isSuccess = type === "success";
 
-  toast.className = `px-4 py-3 rounded-xl border text-xs font-semibold shadow-2xl flex items-center space-x-2 pointer-events-auto toast-enter ${
+  toast.className = `px-3.5 py-2.5 rounded-lg border text-xs font-mono font-medium shadow-2xl flex items-center space-x-2 pointer-events-auto toast-slide-in ${
     isError
-      ? "bg-rose-950/90 border-rose-800 text-rose-200"
+      ? "bg-black border-rose-500/50 text-rose-300"
       : isSuccess
-      ? "bg-emerald-950/90 border-emerald-800 text-emerald-200"
-      : "bg-slate-900/90 border-slate-700 text-slate-200"
+      ? "bg-black border-emerald-500/50 text-emerald-300"
+      : "bg-black border-white/20 text-white/90"
   }`;
 
   const iconName = isError ? "alert-circle" : isSuccess ? "check-circle-2" : "info";
   toast.innerHTML = `
-    <i data-lucide="${iconName}" class="w-4 h-4 flex-shrink-0 ${isError ? 'text-rose-400' : isSuccess ? 'text-emerald-400' : 'text-cyan-400'}"></i>
+    <i data-lucide="${iconName}" class="w-3.5 h-3.5 flex-shrink-0 ${isError ? 'text-rose-400' : isSuccess ? 'text-emerald-400' : 'text-white'}"></i>
     <span>${message}</span>
   `;
 
@@ -46,11 +46,11 @@ function showToast(message, type = "info") {
   lucide.createIcons();
 
   setTimeout(() => {
-    toast.style.transition = "opacity 0.3s ease, transform 0.3s ease";
+    toast.style.transition = "opacity 0.25s ease, transform 0.25s ease";
     toast.style.opacity = "0";
-    toast.style.transform = "translateX(50px)";
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+    toast.style.transform = "translateY(8px)";
+    setTimeout(() => toast.remove(), 250);
+  }, 3500);
 }
 
 async function initMockOrFirebaseAuth() {
@@ -86,11 +86,11 @@ function updateUserUI(name, email) {
   const nameLabel = document.getElementById("userNameLabel");
   const emailLabel = document.getElementById("userEmailLabel");
   if (nameLabel) nameLabel.innerText = name;
-  if (emailLabel) emailLabel.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1"></span> ${email}`;
+  if (emailLabel) emailLabel.innerText = email;
 }
 
 // ==============================================================================
-// 2. UI EVENT LISTENERS (DRAG & DROP, MODALS, TABS)
+// 2. UI EVENT LISTENERS
 // ==============================================================================
 function initUIEventListeners() {
   // Blind Screening Toggle
@@ -100,7 +100,7 @@ function initUIEventListeners() {
       isBlindMode = e.target.checked;
       applyBlindModeUI();
       renderCandidateList(candidatesCache);
-      showToast(isBlindMode ? "Zero-Bias Blind Mode Enabled (PII Redacted)" : "Full Candidate Dossier Mode Enabled", "info");
+      showToast(isBlindMode ? "Zero-Bias Mode: PII Redacted" : "Standard Mode: Full Dossier", "info");
     });
   }
 
@@ -115,7 +115,7 @@ function initUIEventListeners() {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropzone.classList.add("dropzone-active");
+        dropzone.classList.add("dropzone-mesh-active");
       }, false);
     });
 
@@ -123,7 +123,7 @@ function initUIEventListeners() {
       dropzone.addEventListener(eventName, (e) => {
         e.preventDefault();
         e.stopPropagation();
-        dropzone.classList.remove("dropzone-active");
+        dropzone.classList.remove("dropzone-mesh-active");
       }, false);
     });
 
@@ -211,7 +211,7 @@ async function handleResumeUpload(e) {
   formData.append("job_description", jobDescription);
 
   uploadBtn.disabled = true;
-  uploadBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Analyzing with Gemini Multimodal...</span>`;
+  uploadBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-black"></i><span>Analyzing with Gemini...</span>`;
   lucide.createIcons();
 
   try {
@@ -228,7 +228,7 @@ async function handleResumeUpload(e) {
     }
 
     const newCandidate = await resp.json();
-    showToast(`Successfully screened ${newCandidate.personal_info.fullname || 'Candidate'}!`, "success");
+    showToast(`Screened ${newCandidate.personal_info.fullname || 'Candidate'}!`, "success");
 
     // Prepend to candidate list
     candidatesCache = [newCandidate, ...candidatesCache.filter(c => c.id !== newCandidate.id)];
@@ -245,7 +245,7 @@ async function handleResumeUpload(e) {
     showToast("Upload Notice: " + err.message, "error");
   } finally {
     uploadBtn.disabled = false;
-    uploadBtn.innerHTML = `<i data-lucide="sparkles" class="w-4 h-4"></i><span>Screen Candidate with Gemini</span>`;
+    uploadBtn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-black"></i><span>Screen Candidate with Gemini</span>`;
     lucide.createIcons();
   }
 }
@@ -291,9 +291,9 @@ function renderCandidateList(candidates) {
 
   if (!candidates.length) {
     container.innerHTML = `
-      <div class="text-center py-12 text-slate-500 text-xs">
-        <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
-        No candidates screened yet.<br>Drag & drop a resume to begin!
+      <div class="text-center py-10 font-mono text-white/30 text-[11px]">
+        <i data-lucide="inbox" class="w-6 h-6 mx-auto mb-1.5 opacity-40"></i>
+        No candidates screened yet.<br>Drag & drop a resume to begin.
       </div>
     `;
     lucide.createIcons();
@@ -308,21 +308,21 @@ function renderCandidateList(candidates) {
 
     return `
       <div onclick="selectCandidate('${cand.id}')"
-           class="p-3.5 rounded-xl border transition cursor-pointer flex items-center justify-between ${
+           class="p-3 rounded-lg border transition cursor-pointer flex items-center justify-between ${
              isSelected
-               ? "bg-indigo-950/50 border-indigo-500/70 shadow-lg shadow-indigo-950/50"
-               : "bg-slate-950/40 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/40"
+               ? "bg-white/[0.08] border-white/40 shadow-sm"
+               : "bg-black/40 border-white/[0.06] hover:border-white/[0.15] hover:bg-white/[0.02]"
            }">
-        <div class="space-y-1 overflow-hidden pr-2">
-          <div class="text-xs font-bold text-slate-100 truncate ${isBlindMode ? 'redacted-blur' : ''}">${name}</div>
-          <div class="text-[11px] text-cyan-400 font-medium truncate">${pos}</div>
+        <div class="space-y-0.5 overflow-hidden pr-2">
+          <div class="text-xs font-semibold text-white truncate ${isBlindMode ? 'redacted-blur' : ''}">${name}</div>
+          <div class="text-[10px] font-mono text-white/50 truncate">${pos}</div>
         </div>
-        <div class="px-2.5 py-1 rounded-lg text-xs font-extrabold flex-shrink-0 ${
+        <div class="px-2 py-0.5 rounded text-[11px] font-mono font-bold flex-shrink-0 ${
           score >= 8
-            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
             : score >= 5
-            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-            : "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+            : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
         }">
           ${score}/10
         </div>
@@ -366,7 +366,7 @@ function renderCandidateDetail(cand) {
   if (rawSkills && rawSkills !== "N/A") {
     const skillList = rawSkills.split(/[\n,-]+/).map(s => s.trim()).filter(s => s && s.length > 1);
     if (skillList.length > 0) {
-      skillsContainer.innerHTML = `<div class="flex flex-wrap gap-1.5">${skillList.map(s => `<span class="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-semibold">${s}</span>`).join("")}</div>`;
+      skillsContainer.innerHTML = `<div class="flex flex-wrap gap-1.5">${skillList.map(s => `<span class="px-2 py-0.5 rounded bg-white/[0.04] text-white/80 border border-white/[0.08] font-mono text-[10px]">${s}</span>`).join("")}</div>`;
     } else {
       skillsContainer.innerText = rawSkills;
     }
@@ -384,18 +384,18 @@ function renderCandidateDetail(cand) {
 
   let eduHtml = [];
   if (school && school !== "N/A") {
-    let mainEdu = `<strong class="text-slate-100">${school}</strong>`;
+    let mainEdu = `<strong class="text-white">${school}</strong>`;
     if (major && major !== "N/A") mainEdu += ` — ${major}`;
     if (degree && degree !== "Other" && degree !== "N/A") mainEdu = `${degree}: ` + mainEdu;
     if (year && year !== "N/A") mainEdu += ` (${year})`;
-    if (rank && rank !== "N/A") mainEdu += ` • <span class="text-emerald-400 font-bold">${rank}</span>`;
+    if (rank && rank !== "N/A") mainEdu += ` • <span class="text-emerald-400 font-mono font-bold">${rank}</span>`;
     eduHtml.push(`<div>${mainEdu}</div>`);
   }
   if (cert && cert !== "N/A") {
-    eduHtml.push(`<div class="text-slate-400 pt-1 text-[11px]"><span class="text-cyan-400 font-bold">Certifications:</span> ${cert.replace(/\n/g, ', ')}</div>`);
+    eduHtml.push(`<div class="text-white/60 pt-1 text-[11px] font-mono"><span class="text-cyan-400 font-bold">Certifications:</span> ${cert.replace(/\n/g, ', ')}</div>`);
   }
   if (eduHtml.length === 0) {
-    eduHtml.push(`<div class="text-slate-400">Formal education and credentials verified.</div>`);
+    eduHtml.push(`<div class="text-white/40 font-mono text-xs">Formal education and credentials verified.</div>`);
   }
   document.getElementById("viewEducation").innerHTML = eduHtml.join("");
 
@@ -406,12 +406,12 @@ function renderCandidateDetail(cand) {
   // Clear Chat History
   const chatContainer = document.getElementById("chatHistoryContainer");
   chatContainer.innerHTML = `
-    <div class="flex items-start space-x-2.5">
-      <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center flex-shrink-0">
-        <i data-lucide="bot" class="w-4 h-4 text-indigo-300"></i>
+    <div class="flex items-start space-x-2">
+      <div class="w-6 h-6 rounded bg-white/[0.08] text-white flex items-center justify-center flex-shrink-0">
+        <i data-lucide="bot" class="w-3.5 h-3.5"></i>
       </div>
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl rounded-tl-none text-xs text-slate-200 max-w-[85%]">
-        Hello! I am your Candidate Intelligence Copilot for <strong>${cand.personal_info.fullname}</strong>. Ask me anything regarding this candidate's technical depth, tenure stability, or request a custom interview script.
+      <div class="bg-[#111111] border border-white/[0.08] p-3 rounded-lg text-xs text-white/80 max-w-[85%] font-mono">
+        Hello! I am your Candidate Intelligence Copilot for <strong>${cand.personal_info.fullname}</strong>. Ask me anything regarding this candidate's background, tenure, or interview focus areas.
       </div>
     </div>
   `;
@@ -441,17 +441,17 @@ function renderRadarChart(radar, cand) {
   radarChartInstance = new Chart(ctx, {
     type: "radar",
     data: {
-      labels: ["Hard Skills", "Experience", "Education & Certs", "Stability"],
+      labels: ["Hard Skills", "Experience", "Education", "Stability"],
       datasets: [{
-        label: "Candidate Fit",
+        label: "Fit Matrix",
         data: [hardSkills, experience, education, stability],
-        backgroundColor: "rgba(79, 70, 229, 0.3)",
-        borderColor: "rgba(6, 182, 212, 1)",
-        pointBackgroundColor: "rgba(99, 102, 241, 1)",
-        pointBorderColor: "#ffffff",
-        pointHoverBackgroundColor: "#ffffff",
-        pointHoverBorderColor: "rgba(6, 182, 212, 1)",
-        borderWidth: 2.5
+        backgroundColor: "rgba(255, 255, 255, 0.08)",
+        borderColor: "#ffffff",
+        pointBackgroundColor: "#ffffff",
+        pointBorderColor: "#000000",
+        pointHoverBackgroundColor: "#000000",
+        pointHoverBorderColor: "#ffffff",
+        borderWidth: 1.5
       }]
     },
     options: {
@@ -461,9 +461,9 @@ function renderRadarChart(radar, cand) {
         r: {
           min: 0,
           max: 100,
-          angleLines: { color: "rgba(51, 65, 85, 0.4)" },
-          grid: { color: "rgba(51, 65, 85, 0.4)" },
-          pointLabels: { color: "#e2e8f0", font: { size: 10.5, weight: "700" } },
+          angleLines: { color: "rgba(255, 255, 255, 0.08)" },
+          grid: { color: "rgba(255, 255, 255, 0.08)" },
+          pointLabels: { color: "#888888", font: { family: "'Geist Mono', monospace", size: 10, weight: "600" } },
           ticks: { display: false, stepSize: 20 }
         }
       },
@@ -506,11 +506,11 @@ async function handleChatSubmit(e) {
 
   // Append user message
   chatContainer.innerHTML += `
-    <div class="flex items-start justify-end space-x-2.5">
-      <div class="bg-indigo-600/90 text-white p-3 rounded-xl rounded-tr-none text-xs max-w-[85%] shadow-md">
+    <div class="flex items-start justify-end space-x-2">
+      <div class="bg-white text-black font-medium p-2.5 rounded-lg text-xs max-w-[85%] shadow-sm">
         ${message}
       </div>
-      <div class="w-7 h-7 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center flex-shrink-0 text-[10px] font-bold">
+      <div class="w-6 h-6 rounded bg-white text-black flex items-center justify-center flex-shrink-0 text-[10px] font-bold font-mono">
         HR
       </div>
     </div>
@@ -521,12 +521,12 @@ async function handleChatSubmit(e) {
   // Append loading state
   const loadingId = `loading-${Date.now()}`;
   chatContainer.innerHTML += `
-    <div id="${loadingId}" class="flex items-start space-x-2.5">
-      <div class="w-7 h-7 rounded-lg bg-indigo-600/30 text-indigo-300 flex items-center justify-center flex-shrink-0">
-        <i data-lucide="bot" class="w-4 h-4"></i>
+    <div id="${loadingId}" class="flex items-start space-x-2">
+      <div class="w-6 h-6 rounded bg-white/[0.08] text-white flex items-center justify-center flex-shrink-0">
+        <i data-lucide="bot" class="w-3.5 h-3.5"></i>
       </div>
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl rounded-tl-none text-xs text-slate-400">
-        <i data-lucide="loader-2" class="w-3.5 h-3.5 inline animate-spin mr-1"></i> Formulating response with Gemini...
+      <div class="bg-[#111111] border border-white/[0.08] p-2.5 rounded-lg text-xs text-white/50 font-mono">
+        <i data-lucide="loader-2" class="w-3 h-3 inline animate-spin mr-1"></i> Formulating response with Gemini...
       </div>
     </div>
   `;
@@ -552,11 +552,11 @@ async function handleChatSubmit(e) {
     const data = await resp.json();
 
     chatContainer.innerHTML += `
-      <div class="flex items-start space-x-2.5">
-        <div class="w-7 h-7 rounded-lg bg-indigo-600/30 text-indigo-300 flex items-center justify-center flex-shrink-0">
-          <i data-lucide="bot" class="w-4 h-4"></i>
+      <div class="flex items-start space-x-2">
+        <div class="w-6 h-6 rounded bg-white/[0.08] text-white flex items-center justify-center flex-shrink-0">
+          <i data-lucide="bot" class="w-3.5 h-3.5"></i>
         </div>
-        <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-xl rounded-tl-none text-xs text-slate-200 max-w-[85%] whitespace-pre-line leading-relaxed">
+        <div class="bg-[#111111] border border-white/[0.08] p-3 rounded-lg text-xs text-white/90 max-w-[85%] whitespace-pre-line leading-relaxed">
           ${data.reply}
         </div>
       </div>
@@ -592,7 +592,7 @@ async function handleGenerateInterviewKit() {
   const emailDraft = document.getElementById("modalEmailDraft");
 
   modal.classList.remove("hidden");
-  container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs flex items-center justify-center space-x-2"><i data-lucide="loader-2" class="w-4 h-4 animate-spin text-cyan-400"></i><span>Generating probing questions with Gemini...</span></div>`;
+  container.innerHTML = `<div class="text-center py-6 font-mono text-white/50 text-xs flex items-center justify-center space-x-2"><i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-white"></i><span>Generating probing questions with Gemini...</span></div>`;
   lucide.createIcons();
 
   try {
@@ -606,18 +606,18 @@ async function handleGenerateInterviewKit() {
     const data = await resp.json();
 
     container.innerHTML = data.questions.map((q, idx) => `
-      <div class="p-3.5 bg-slate-950 border border-slate-800 rounded-xl space-y-2 text-xs">
-        <div class="font-bold text-slate-100 flex items-start">
-          <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-[10px] mr-2 mt-0.5 flex-shrink-0">${idx + 1}</span>
+      <div class="p-3 bg-black border border-white/[0.08] rounded-lg space-y-1.5 text-xs">
+        <div class="font-semibold text-white flex items-start">
+          <span class="w-4 h-4 rounded bg-white text-black font-mono font-bold flex items-center justify-center text-[10px] mr-2 mt-0.5 flex-shrink-0">${idx + 1}</span>
           <span>${q.question}</span>
         </div>
-        <div class="text-slate-400 text-[11px] pl-7"><span class="text-indigo-400 font-bold">Objective:</span> ${q.objective}</div>
-        <div class="text-slate-400 text-[11px] pl-7"><span class="text-emerald-400 font-bold">Expected Indicators:</span> ${q.expected_answer_indicators}</div>
+        <div class="text-white/50 text-[11px] pl-6"><span class="text-white font-mono font-bold">Objective:</span> ${q.objective}</div>
+        <div class="text-white/50 text-[11px] pl-6"><span class="text-emerald-400 font-mono font-bold">Indicators:</span> ${q.expected_answer_indicators}</div>
       </div>
     `).join("");
 
     emailDraft.value = data.custom_email_draft;
   } catch (err) {
-    container.innerHTML = `<div class="text-rose-400 text-xs py-4 text-center">Error: ${err.message}</div>`;
+    container.innerHTML = `<div class="text-rose-400 font-mono text-xs py-4 text-center">Error: ${err.message}</div>`;
   }
 }
