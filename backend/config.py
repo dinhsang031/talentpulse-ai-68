@@ -23,12 +23,14 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-flash"
 
-    # Google Cloud & Firestore
+    # Google Cloud & Vertex AI Enterprise
     GCP_PROJECT_ID: str = "gen-lang-client-0394973299"
+    GCP_LOCATION: str = "us-central1"
+    GOOGLE_APPLICATION_CREDENTIALS: str = "backend/credentials/gen-lang-client-0394973299-d70ee52df136.json"
     FIRESTORE_DATABASE: str = "(default)"
 
     # Firebase Admin SDK Credentials
-    FIREBASE_SERVICE_ACCOUNT_PATH: str = ""
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = "backend/credentials/talent-pulse-ai-firebase-adminsdk-fbsvc-70643cb972.json"
 
     # Firebase Web Config (For serving to Frontend)
     FIREBASE_WEB_API_KEY: str = ""
