@@ -128,49 +128,57 @@ async def upload_and_process_resume(
 
     logger.info(f"Processing resume '{file.filename}' for user '{current_user.uid}' (Role: {target_position or 'Auto-detect'})")
     
-    file_bytes = await file.read()
-    filename_lower = file.filename.lower()
-    
-    mime_type = file.content_type
-    if filename_lower.endswith(".pdf"):
-        mime_type = "application/pdf"
-        extracted_text = extract_text_from_pdf_stream(file_bytes)
-    elif filename_lower.endswith(".docx") or filename_lower.endswith(".doc"):
-        mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        extracted_text = extract_text_from_docx_stream(file_bytes)
-    elif filename_lower.endswith(".png"):
-        mime_type = "image/png"
-        extracted_text = ""
-    elif filename_lower.endswith(".jpg") or filename_lower.endswith(".jpeg"):
-        mime_type = "image/jpeg"
-        extracted_text = ""
-    else:
-        extracted_text = file_bytes.decode("utf-8", errors="ignore")
+    try:
+        file_bytes = await file.read()
+        filename_lower = file.filename.lower()
+        
+        mime_type = file.content_type
+        if filename_lower.endswith(".pdf"):
+            mime_type = "application/pdf"
+            extracted_text = extract_text_from_pdf_stream(file_bytes)
+        elif filename_lower.endswith(".docx") or filename_lower.endswith(".doc"):
+            mime_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            extracted_text = extract_text_from_docx_stream(file_bytes)
+        elif filename_lower.endswith(".png"):
+            mime_type = "image/png"
+            extracted_text = ""
+        elif filename_lower.endswith(".jpg") or filename_lower.endswith(".jpeg"):
+            mime_type = "image/jpeg"
+            extracted_text = ""
+        else:
+            extracted_text = file_bytes.decode("utf-8", errors="ignore")
 
-    # 2. Extract & Score via Gemini (Supports Multimodal PDF/Image Direct Stream)
-    ai_result = await gemini_service.extract_candidate_data(
-        cv_text=extracted_text,
-        filename=file.filename,
-        target_position=target_position,
-        jd_text=job_description or "",
-        file_bytes=file_bytes,
-        mime_type=mime_type
-    )
+        # 2. Extract & Score via Gemini (Supports Multimodal PDF/Image Direct Stream)
+        ai_result = await gemini_service.extract_candidate_data(
+            cv_text=extracted_text,
+            filename=file.filename,
+            target_position=target_position,
+            jd_text=job_description or "",
+            file_bytes=file_bytes,
+            mime_type=mime_type
+        )
 
-    candidate_id = f"cand_{uuid.uuid4().hex[:10]}"
-    candidate_profile = CandidateProfile(
-        id=candidate_id,
-        user_id=current_user.uid,
-        personal_info=ai_result["personal_info"],
-        job_info=ai_result["job_info"],
-        evaluation=ai_result["evaluation"],
-        raw_text=extracted_text[:2000],
-        original_filename=file.filename
-    )
+        candidate_id = f"cand_{uuid.uuid4().hex[:10]}"
+        candidate_profile = CandidateProfile(
+            id=candidate_id,
+            user_id=current_user.uid,
+            personal_info=ai_result["personal_info"],
+            job_info=ai_result["job_info"],
+            evaluation=ai_result["evaluation"],
+            raw_text=extracted_text[:2000],
+            original_filename=file.filename
+        )
 
-    # 3. Persist to Firestore
-    saved_profile = await firestore_repo.save_candidate(candidate_profile)
-    return saved_profile
+        # 3. Persist to Firestore
+        saved_profile = await firestore_repo.save_candidate(candidate_profile)
+        return saved_profile
+
+    except Exception as e:
+        logger.error(f"Error processing resume upload: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process resume: {str(e)}"
+        )
 
 
 @app.get("/api/candidates", response_model=List[CandidateProfile])
