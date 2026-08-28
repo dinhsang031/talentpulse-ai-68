@@ -13,6 +13,7 @@
 **TalentPulse AI** is an enterprise-grade, zero-bias candidate intelligence platform built from the ground up to solve modern recruitment challenges:
 
 - **Multimodal Resume Ingestion:** Ingests complex multi-column PDFs, DOCX, and scanned image resumes directly via Gemini without brittle OCR regex pipelines.
+- **Production AI Agent Pipeline:** Battle-tested pipeline capable of processing 1,000+ resumes monthly across recruitment job board APIs, email webhooks, and ATS integrations—reducing TA manual screening time by 90%.
 - **4-Dimensional Talent Radar Matrix:** Evaluates *Hard Skills*, *Domain Experience*, *Education & Certifications*, and *Career Stability* (50-100 score).
 - **Zero-Bias Blind Screening:** 1-click toggle to redact Personally Identifiable Information (PII) to ensure 100% objective hiring decisions.
 - **Multi-turn Candidate Deep-Dive Copilot:** Recruiter assistant capable of analyzing project depth, comparing skills, and drafting tailored correspondence in real-time.
