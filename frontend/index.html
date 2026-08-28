@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalentPulse AI — Multimodal Recruiter Copilot on Cloud Run</title>
+  <meta name="description" content="Zero-bias AI resume parsing, candidate scoring, and multi-turn interview copilot powered by Google Cloud Run, Firebase, and Gemini.">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN for Radar Analysis -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styles with cache-busting -->
+  <link rel="stylesheet" href="/static/styles.css?v=1.0.3">
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+</head>
+<body class="h-full font-sans antialiased bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 text-slate-100 flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-3">
+        <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i data-lucide="sparkles" class="h-5 w-5 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-outfit font-bold text-xl tracking-tight text-white">TalentPulse<span class="text-indigo-400">.AI</span></span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Cloud Run</span>
+          </div>
+          <p class="text-xs text-slate-400">Multimodal Candidate Intelligence Copilot</p>
+        </div>
+      </div>
+
+      <!-- Center Badges (Cloud Run + Gemini + Firestore) -->
+      <div class="hidden md:flex items-center space-x-2">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+          <span class="w-2 h-2 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          Gemini 2.5 Flash
+        </span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 mr-1 text-blue-400"></i>
+          Firebase Isolated
+        </span>
+      </div>
+
+      <!-- Right Controls: Blind Screening Toggle + User Profile -->
+      <div class="flex items-center space-x-4">
+        <!-- Zero-Bias Blind Screening Toggle -->
+        <label class="flex items-center cursor-pointer select-none group" title="Hide PII (Names, Gender, Age) for 100% objective screening">
+          <div class="relative">
+            <input type="checkbox" id="blindScreeningToggle" class="sr-only">
+            <div class="block bg-slate-800 w-11 h-6 rounded-full border border-slate-700 transition group-hover:border-slate-600"></div>
+            <div class="dot absolute left-1 top-1 bg-slate-400 w-4 h-4 rounded-full transition transform"></div>
+          </div>
+          <div class="ml-2.5 text-xs">
+            <div class="font-medium text-slate-200">Zero-Bias Mode</div>
+            <div class="text-[10px] text-slate-400">Blind Screening</div>
+          </div>
+        </label>
+
+        <!-- Auth Button / User Profile -->
+        <div id="authContainer" class="flex items-center space-x-2">
+          <button id="loginBtn" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/30 transition flex items-center space-x-1.5">
+            <i data-lucide="log-in" class="w-3.5 h-3.5"></i>
+            <span>Sign In</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content 3-Column Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-hidden">
+    
+    <!-- LEFT PANEL: Upload & Candidate List (4 Cols) -->
+    <section class="lg:col-span-4 flex flex-col space-y-6">
+      
+      <!-- Upload Card -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 bg-slate-900/50 relative overflow-hidden">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 mb-3 flex items-center">
+          <i data-lucide="upload-cloud" class="w-4 h-4 mr-2 text-indigo-400"></i>
+          Ingest & Screen Candidate
+        </h2>
+
+        <form id="uploadForm" class="space-y-4">
+          <!-- Job Position Input -->
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Target Job Title (Optional)</label>
+            <input type="text" id="targetPositionInput" value="" placeholder="Auto-detect from CV (e.g. HR Data Analyst)"
+                   class="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+          </div>
+
+          <!-- Drag & Drop Zone -->
+          <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-indigo-500/80 rounded-xl p-5 text-center cursor-pointer transition bg-slate-950/40">
+            <input type="file" id="resumeFileInput" accept=".pdf,.docx,.doc,.jpg,.png" class="hidden">
+            <i data-lucide="file-text" class="w-8 h-8 mx-auto text-indigo-400 mb-2"></i>
+            <p class="text-xs font-medium text-slate-200" id="uploadPrompt">Drag & Drop Resume (PDF, DOCX, Scan)</p>
+            <p class="text-[10px] text-slate-400 mt-1">Direct Multimodal OCR & Structured Parsing</p>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitResumeBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center justify-center space-x-2">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>Analyze with Gemini 2.5 Flash</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- Candidate Talent Pool List -->
+      <div class="glass-card rounded-2xl p-5 border border-slate-800 bg-slate-900/50 flex-1 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-300 flex items-center">
+            <i data-lucide="users" class="w-4 h-4 mr-2 text-indigo-400"></i>
+            Screened Talent Pool
+          </h2>
+          <span id="candidateCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">0 Profiles</span>
+        </div>
+
+        <div id="candidateListContainer" class="space-y-2.5 overflow-y-auto flex-1 pr-1 custom-scroll">
+          <!-- Populated dynamically -->
+          <div class="text-center py-10 text-slate-500 text-xs">
+            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+            No candidates screened yet. Upload a resume to begin!
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER & RIGHT: Candidate Detail & Copilot (8 Cols) -->
+    <section class="lg:col-span-8 flex flex-col space-y-6 overflow-y-auto pr-1 custom-scroll">
+      
+      <!-- Candidate Profile View (Initially Hidden or shows placeholder) -->
+      <div id="candidateDetailCard" class="glass-card rounded-2xl p-6 border border-slate-800 bg-slate-900/50 space-y-6">
+        
+        <!-- Header: Candidate Name, Fit Score Badge, Contact Info -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-800 gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center space-x-3">
+              <h1 id="viewFullname" class="text-2xl font-bold font-outfit text-white tracking-tight">Nguyen Van A</h1>
+              <span id="viewFitScoreTag" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">9 / 10 Match</span>
+            </div>
+            <p id="viewPosition" class="text-sm text-indigo-400 font-medium">Senior Software Engineer</p>
+            <div id="viewPiiRow" class="flex flex-wrap gap-4 text-xs text-slate-400 pt-1">
+              <span class="flex items-center"><i data-lucide="phone" class="w-3.5 h-3.5 mr-1 text-slate-500"></i><span id="viewPhone">0912345678</span></span>
+              <span class="flex items-center"><i data-lucide="mail" class="w-3.5 h-3.5 mr-1 text-slate-500"></i><span id="viewEmail">nguyenvana@example.com</span></span>
+              <span class="flex items-center"><i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1 text-slate-500"></i><span id="viewCity">Ho Chi Minh</span></span>
+            </div>
+          </div>
+
+          <!-- Quick Actions: Interview Kit Generator -->
+          <div>
+            <button id="generateInterviewKitBtn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition flex items-center space-x-2">
+              <i data-lucide="file-check" class="w-4 h-4 text-indigo-400"></i>
+              <span>Generate Interview Kit</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Two Column Metrics: Radar Chart (4 Dimensions) + HR Analysis -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+          
+          <!-- Radar Chart (5 Cols) -->
+          <div class="md:col-span-5 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 flex flex-col items-center justify-center">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">4D Talent Radar Fit</h3>
+            <div class="w-full max-w-[240px] aspect-square">
+              <canvas id="radarChart"></canvas>
+            </div>
+          </div>
+
+          <!-- HR Considerations & Key Strengths (7 Cols) -->
+          <div class="md:col-span-7 space-y-4">
+            <div>
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center">
+                <i data-lucide="clipboard-check" class="w-3.5 h-3.5 mr-1.5 text-emerald-400"></i>
+                HR Consideration & Evaluation
+              </h3>
+              <p id="viewConsideration" class="text-xs text-slate-300 leading-relaxed bg-slate-950/40 p-3 rounded-lg border border-slate-800/60">
+                Candidate demonstrates strong domain leadership and deep fullstack expertise.
+              </p>
+            </div>
+
+            <div>
+              <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 mr-1.5 text-indigo-400"></i>
+                Key Strengths & Suitability
+              </h3>
+              <div id="viewSuitability" class="text-xs text-slate-300 space-y-1 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 whitespace-pre-line">
+                - 6+ years hands-on experience in distributed systems.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills & Experience Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div class="space-y-2">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center">
+              <i data-lucide="cpu" class="w-3.5 h-3.5 mr-1.5 text-purple-400"></i>
+              Skills & Frameworks
+            </h3>
+            <div id="viewSkills" class="text-xs text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 whitespace-pre-line">
+              Python, FastAPI, Docker, Google Cloud Run, Firestore, React
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center">
+              <i data-lucide="graduation-cap" class="w-3.5 h-3.5 mr-1.5 text-blue-400"></i>
+              Education & Certifications
+            </h3>
+            <div id="viewEducation" class="text-xs text-slate-300 bg-slate-950/40 p-3 rounded-lg border border-slate-800/60 whitespace-pre-line">
+              Bachelor in Computer Science — Bach Khoa University
+            </div>
+          </div>
+        </div>
+
+        <!-- Multi-turn Candidate Chat Copilot (Interactive Section) -->
+        <div class="pt-4 border-t border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200 flex items-center">
+              <i data-lucide="message-square" class="w-4 h-4 mr-2 text-indigo-400"></i>
+              Candidate Deep-Dive Copilot (Multi-turn Chat)
+            </h3>
+            <span class="text-[10px] text-slate-400">Grounded in Candidate CV Context</span>
+          </div>
+
+          <!-- Chat History Container -->
+          <div id="chatHistoryContainer" class="bg-slate-950/70 rounded-xl p-4 border border-slate-800/80 h-56 overflow-y-auto space-y-3 custom-scroll">
+            <div class="flex items-start space-x-2.5">
+              <div class="w-7 h-7 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center flex-shrink-0">
+                <i data-lucide="bot" class="w-4 h-4 text-indigo-300"></i>
+              </div>
+              <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl rounded-tl-none text-xs text-slate-200 max-w-[85%]">
+                Hello! I am your Candidate Intelligence Copilot. Ask me anything about this candidate's projects, specific skill depth, or ask me to draft tailored interview questions.
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input -->
+          <form id="chatForm" class="flex space-x-2">
+            <input type="text" id="chatInput" placeholder="e.g. What experience does this candidate have with Cloud Run and Kubernetes?" required
+                   class="flex-1 px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+            <button type="submit" id="sendChatBtn" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition flex items-center space-x-1.5 shadow-md shadow-indigo-600/20">
+              <i data-lucide="send" class="w-3.5 h-3.5"></i>
+              <span>Send</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Interview Kit & Email Draft -->
+  <div id="interviewKitModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 max-h-[90vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold font-outfit text-white flex items-center">
+          <i data-lucide="file-text" class="w-5 h-5 mr-2 text-indigo-400"></i>
+          Tailored Interview Kit & Outreach
+        </h3>
+        <button id="closeModalBtn" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Generated Questions -->
+      <div class="space-y-3">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Contextual Technical & Behavioral Questions</h4>
+        <div id="modalQuestionsContainer" class="space-y-2.5">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Generated Email Draft -->
+      <div class="space-y-2 pt-2">
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-purple-400">Personalized Invitation Email Draft</h4>
+        <textarea id="modalEmailDraft" rows="5" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts with cache-busting -->
+  <script src="/static/app.js?v=1.0.3"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# ==============================================================================
+# TALENTPULSE AI — GOOGLE CLOUD BUILD PIPELINE
+# ==============================================================================
+steps:
+  # 1. Build Container Image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA', '.']
+
+  # 2. Push Container Image to Container Registry / Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA']
+
+  # 3. Deploy Container to Google Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'talentpulse-ai'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=GEMINI_API_KEY:latest'
+
+images:
+  - 'gcr.io/$PROJECT_ID/talentpulse-ai:$COMMIT_SHA'
