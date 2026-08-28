@@ -80,6 +80,7 @@ async def health_check():
 
 
 @app.get("/api/config/firebase")
+@app.get("/api/auth/firebase-config")
 async def get_firebase_web_config():
     """Provides public Firebase Web credentials for frontend authentication."""
     return {
