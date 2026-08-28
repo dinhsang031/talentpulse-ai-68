@@ -10,7 +10,7 @@ Write-Host "==========================================================" -Foregro
 $PROJECT_ID = "talent-pulse-ai"
 $SERVICE_NAME = "talentpulse-ai"
 $REGION = "us-central1"
-$GEMINI_API_KEY = "AIzaSyCGhoRDNpmlKfB_QQDTn1jtmqGS9MXQBzA"
+$GEMINI_API_KEY = $env:GEMINI_API_KEY
 
 Write-Host "[1/4] Setting active GCP Project to '$PROJECT_ID'..." -ForegroundColor Yellow
 gcloud config set project $PROJECT_ID
